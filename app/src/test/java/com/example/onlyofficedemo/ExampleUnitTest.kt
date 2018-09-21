@@ -1,4 +1,4 @@
-package com.example.onlyofficesimpledemo
+package com.example.onlyofficedemo
 
 import org.junit.Test
 

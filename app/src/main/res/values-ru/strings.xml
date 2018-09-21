@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connect_to_onlyoffice">Подключение к OnlyOffice</string>
+    <string name="login">Логин</string>
+    <string name="password">Пароль</string>
+    <string name="login_button_text">Войти</string>
+    <string name="login_cant_be_empty_message">Логин не может быть пустым</string>
+    <string name="password_cant_be_empty_message">Пароль не может быть пустым</string>
+</resources>
