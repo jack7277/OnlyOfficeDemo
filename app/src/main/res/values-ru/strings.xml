@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">OnlyOffice Демо</string>
     <string name="connect_to_onlyoffice">Подключение к OnlyOffice</string>
     <string name="login">Логин</string>
     <string name="password">Пароль</string>
     <string name="login_button_text">Войти</string>
     <string name="login_cant_be_empty_message">Логин не может быть пустым</string>
     <string name="password_cant_be_empty_message">Пароль не может быть пустым</string>
+    <string name="portal_name">Имя Портала</string>
+    <string name="portal_name_cant_be_empty_message">Имя портала не может быть пустым</string>
+    <string name="error_code">Ошибка, код:</string>
+    <string name="portal_not_found">Портал не найден</string>
+    <string name="login_success">Успешный вход</string>
+    <string name="invalid_email">Неверный емейл</string>
 </resources>

@@ -24,13 +24,14 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="18dp"
+        android:layout_marginTop="8dp"
         android:ems="10"
         android:hint="@string/login"
         android:inputType="textEmailAddress"
+        android:text="i.breikin@gmail.com"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textToLogin" />
+        app:layout_constraintTop_toBottomOf="@+id/editTextPortalName" />
 
     <EditText
         android:id="@+id/editTextPassword"
@@ -42,6 +43,7 @@
         android:ems="10"
         android:hint="@string/password"
         android:inputType="textPassword"
+        android:text="Aa192648"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextEmail" />
@@ -57,4 +59,20 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editTextPassword" />
+
+    <EditText
+        android:id="@+id/editTextPortalName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="18dp"
+        android:ems="10"
+        android:hint="@string/portal_name"
+        android:inputType="textPersonName"
+        android:text="biojack.onlyoffice.eu"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textToLogin" />
+
 </android.support.constraint.ConstraintLayout>

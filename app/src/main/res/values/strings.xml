@@ -6,4 +6,11 @@
     <string name="login_button_text">Login</string>
     <string name="login_cant_be_empty_message">Login can\'t be empty</string>
     <string name="password_cant_be_empty_message">Password can\'t be empty</string>
+    <string name="portal_name">Portal Name</string>
+    <string name="portal_name_cant_be_empty_message">Portal Name can\'t be empty</string>
+    <string name="error_code">Error, code:</string>
+    <string name="portal_not_found">Portal not found</string>
+    <string name="login_success">Login success</string>
+    <string name="invalid_email">Invalid email</string>
+
 </resources>
