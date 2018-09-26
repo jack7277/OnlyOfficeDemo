@@ -10,9 +10,10 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.timejet.bio.timejet.UTILS.LoggedInUser;
-import com.timejet.bio.timejet.UTILS.User;
 
-import org.joda.time.DateTime;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.net.URLEncoder;
 import java.util.Objects;
@@ -20,13 +21,11 @@ import java.util.Objects;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-import static com.example.onlyofficedemo.Network.HTTP_requestsKt.getMyDocuments;
 import static com.example.onlyofficedemo.Network.HTTP_requestsKt.loginOnlyOffice;
 import static com.example.onlyofficedemo.Utils.UtilsKt.isOnline;
-import static com.example.onlyofficedemo.Utils.UtilsKt.saveUserToSharedPrefs;
 import static com.example.onlyofficedemo.Utils.UtilsKt.showToast;
 
-public class activity_login extends Activity {
+public class activity_login extends Activity  {
     private static final String TAG = "DEBUG";
     public static Context appContext = null;
 
@@ -41,13 +40,12 @@ public class activity_login extends Activity {
 
         String userToken = Objects.requireNonNull(LoggedInUser.Companion.getUser()).getUserToken();
         if (userToken != null && !userToken.isEmpty()){
-            Intent intent = new Intent(this, activityFoldersFilesView.class);
-            startActivity(intent);
+        startActivityList(this);
         }
 
         //isTokenValid();
         try {
-            getMyDocuments();
+            // getDocuments("@my.json");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -65,6 +63,25 @@ public class activity_login extends Activity {
             else showToast("no internet", appContext);
         });
      // проверяем, если мы залогинены, то убиваю текущую активность и перехожу к следующей
+    }
+   public final void startActivityList (Context context){
+        Intent intent = new Intent(context, activityFoldersFilesView.class);
+        startActivity(intent);
+        finish();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(MessageEventJSONobject event) {
+        // получаю от сервера список файлов и каталогов
+        if (event == null) {
+            showToast("network error, null json", getApplicationContext());
+            return;
+        }
+
+        // это не моё событие
+        if (event.statusCode!=666 && event.response!=null && event.header!=null) return;
+
+        startActivityList(this);
     }
 
 
@@ -121,51 +138,12 @@ public class activity_login extends Activity {
             // do loginOnlyOffice
 //            showToast("Begin Login Process", appContext); рисуем мультик
             try {
-                //loginProcess (loginEmailText, passwordText, portalName);
                 loginOnlyOffice(loginEmailText, passwordText, portalName);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
-
-    void resetToken(){
-        // время вышло, оставляем имя портала и емейл и стираю Токен и его Дату-Время
-        saveUserToSharedPrefs(appContext,
-                new User(LoggedInUser.Companion.getUser().getUserPortal(), LoggedInUser.Companion.getUser().getUserEmail(), "", ""));
-    }
-
-    // проверка времени токена на валидность в сравнении с текущей датой/время
-    public boolean isTokenValid(){
-        // 2019-09-24T01:36:13.8831347+03:00
-        String userTokenExpires = Objects.requireNonNull(LoggedInUser.Companion.getUser()).getUserToken();
-
-        try { //parse by joda time
-            // сохраненное дата-время токена
-            DateTime dtToken = DateTime.parse(userTokenExpires);
-            long dtTokenMillis = dtToken.getMillis();
-
-            // текущее дата-время
-            DateTime dtNow = new DateTime();
-            long dateTimeNowMillis = dtNow.getMillis();
-
-            // проверяем не вышло ли время токена
-            if (dtTokenMillis >= dateTimeNowMillis) {
-                showToast("Token Valid", appContext);
-                return true;
-            } else {
-                showToast("Token Invalid", appContext);
-                // делаем релогин, оставляю емейл, стираю токен и время жизни
-                resetToken();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return false;
-    }
-
-
 
 
 
@@ -191,9 +169,24 @@ public class activity_login extends Activity {
 
 
 
+
+
     @Override
     protected void onPause() {
         super.onPause();
 
     }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    public void onStop() {
+        EventBus.getDefault().unregister(this);
+        super.onStop();
+    }
+
 }

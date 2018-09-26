@@ -1,5 +1,6 @@
 package com.example.onlyofficedemo.Utils;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -10,6 +11,12 @@ public class JSONhelper {
     public final static String USER_TOKEN_EXPIRES = "expires";
     public final static String JSON_MESSAGE = "message";
     public final static String JSON_ERROR = "error";
+    public final static String JSON_FOLDERS = "folders";
+    public final static String JSON_FILES = "files";
+    public final static String JSON_TITLE_FOLDER = "title";
+    public final static String JSON_FILES_COUNT_IN_FOLDER = "filesCount";
+    public final static String JSON_FOLDERS_COUNT_IN_FOLDER = "foldersCount";
+    public final static String JSON_PARENT_ID = "parentId";
 
     private JSONObject jsonObject;
 
@@ -30,6 +37,50 @@ public class JSONhelper {
             e.printStackTrace();
         }
         return statusCode;
+    }
+
+    public String getTitle (){
+        String folderTitle = null;
+        try {
+            folderTitle = getJsonObject().getString(JSON_TITLE_FOLDER);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return folderTitle;
+    }
+
+    public String getParentID (){
+        String parentID = null;
+        try {
+            parentID = getJsonObject().getString(JSON_PARENT_ID);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return parentID;
+    }
+
+    public String getFilesCountInFolder (){
+        String filesCountInFolder = null;
+        try {
+            filesCountInFolder = getJsonObject().getString(JSON_FILES_COUNT_IN_FOLDER);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return filesCountInFolder;
+    }
+
+    public String getFoldersCountInFolder (){
+        String foldersCountInFolder = null;
+        try {
+            foldersCountInFolder = getJsonObject().getString(JSON_FOLDERS_COUNT_IN_FOLDER);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return foldersCountInFolder;
     }
 
     private JSONObject getResponse() {
@@ -62,6 +113,30 @@ public class JSONhelper {
         }
         return token;
     }
+
+    public JSONArray getFolders(){
+        JSONArray jsonObject = null;
+        try {
+            jsonObject = getResponse().getJSONArray(JSON_FOLDERS);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return jsonObject;
+    }
+
+    public JSONArray getFiles(){
+        JSONArray jsonObject = null;
+        try {
+            jsonObject = getResponse().getJSONArray(JSON_FILES);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return jsonObject;
+    }
+
+
 
     public String getTokenExpires() {
         String tokenExpires = null;

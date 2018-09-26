@@ -13,4 +13,8 @@
     <string name="portal_not_found">Портал не найден</string>
     <string name="login_success">Успешный вход</string>
     <string name="invalid_email">Неверный емейл</string>
+    <string name="my_documents">Мои документы</string>
+    <string name="common_documents">Общие документы</string>
+
+
 </resources>

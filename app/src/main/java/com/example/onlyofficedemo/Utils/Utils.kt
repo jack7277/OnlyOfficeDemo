@@ -6,10 +6,14 @@ import android.net.NetworkInfo
 import android.os.Looper
 import android.preference.PreferenceManager
 import android.widget.Toast
+import com.example.onlyofficedemo.Network.resetToken
 import com.example.onlyofficedemo.activity_login.appContext
+import com.timejet.bio.timejet.UTILS.LoggedInUser
 import com.timejet.bio.timejet.UTILS.LoggedInUser.Companion.USER_EMAIL
 import com.timejet.bio.timejet.UTILS.LoggedInUser.Companion.USER_PORTAL_NAME
 import com.timejet.bio.timejet.UTILS.User
+import org.joda.time.DateTime
+import java.util.*
 
 
 // показ тоста, передача контекста вроде как плохая идея
@@ -41,5 +45,39 @@ fun isOnline(): Boolean {
         if (netInfo != null && netInfo.isConnected)
             return true
     }
+    return false
+}
+
+
+
+
+
+// проверка времени токена на валидность в сравнении с текущей датой/время
+fun isTokenValid(): Boolean {
+    // 2019-09-24T01:36:13.8831347+03:00
+    val userTokenExpires = Objects.requireNonNull<User>(LoggedInUser.getUser()).tokenExpires
+
+    try { //parse by joda time
+        // сохраненное дата-время токена
+        val dtToken = DateTime.parse(userTokenExpires)
+        val dtTokenMillis = dtToken.millis
+
+        // текущее дата-время
+        val dtNow = DateTime()
+        val dateTimeNowMillis = dtNow.millis
+
+        // проверяем не вышло ли время токена
+        if (dtTokenMillis >= dateTimeNowMillis) {
+            //showToast("Token Valid", appContext)
+            return true
+        } else {
+            showToast("Token Invalid", appContext)
+            // делаем релогин, оставляю емейл, стираю токен и время жизни
+            resetToken()
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+
     return false
 }

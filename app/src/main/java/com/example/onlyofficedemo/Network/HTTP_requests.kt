@@ -2,10 +2,9 @@ package com.example.onlyofficedemo.Network
 
 import android.content.Intent
 import android.support.v4.content.ContextCompat.startActivity
+import com.example.onlyofficedemo.MessageEventJSONobject
 import com.example.onlyofficedemo.R.string.*
-import com.example.onlyofficedemo.Utils.JSONhelper
-import com.example.onlyofficedemo.Utils.saveUserToSharedPrefs
-import com.example.onlyofficedemo.Utils.showToast
+import com.example.onlyofficedemo.Utils.*
 import com.example.onlyofficedemo.activityFoldersFilesView
 import com.example.onlyofficedemo.activity_login.appContext
 import com.loopj.android.http.AsyncHttpClient
@@ -21,8 +20,14 @@ import cz.msebera.android.httpclient.protocol.HTTP
 import org.json.JSONArray
 import org.json.JSONObject
 import com.loopj.android.http.RequestParams
+import org.greenrobot.eventbus.EventBus
 
 
+internal fun resetToken() {
+    // время вышло, оставляем имя портала и емейл и стираю Токен и его Дату-Время
+    saveUserToSharedPrefs(appContext,
+            User(LoggedInUser.getUser()!!.userPortal, LoggedInUser.getUser()!!.userEmail, "", ""))
+}
 
 @Throws(Exception::class)
 fun loginOnlyOffice(loginEmailText: String?, passwordText: String?, portalName: String?) {
@@ -64,10 +69,12 @@ fun loginOnlyOffice(loginEmailText: String?, passwordText: String?, portalName: 
             //saveToSharedPrefs(appContext, loginEmailText, token, tokenExpires)
 
             showToast(appContext.getResources().getString(login_success), appContext)
-
             // так не очень
 
+            // посылаю событие в activity_login о юзере
+            EventBus.getDefault().post(MessageEventJSONobject(666, null, null));
         }
+
 
         override fun onFailure(statusCode: Int, headers: Array<Header>?, throwable: Throwable, errorResponse: JSONObject?) {
             super.onFailure(statusCode, headers, throwable, errorResponse)
@@ -91,16 +98,24 @@ fun loginOnlyOffice(loginEmailText: String?, passwordText: String?, portalName: 
 }
 
 // Returns the detailed list of files and folders located in the current user 'My Documents' section
-// return json object только возврат асинхронный, чем ловить?
+// return json object только возврат асинхронный, ловим EventBus
 @Throws(Exception::class)
-fun getMyDocuments(){
-    val url: String?
+fun getDocuments(relativeURL: String?) {
+    // нечего дальше делать если null
+    if (relativeURL == null) return;
+
+    if (!isTokenValid()) {
+        showToast("Token Invalid, Relogin", appContext)
+        return;
+    }
+
     val portalName = LoggedInUser.getUser()?.userPortal
     val autorization = LoggedInUser.getUser()?.userToken
 
-    url = "https://" +
+    val url: String? = "https://" +
             portalName +
-            "/api/2.0/files/@my.json"
+            "/api/2.0/files/" +//@my.json"
+            relativeURL;
 
     val client = AsyncHttpClient()
 
@@ -112,27 +127,25 @@ fun getMyDocuments(){
     client.setCookieStore(myCookieStore)
 
     client.get(appContext, url, object : JsonHttpResponseHandler() {
-        override fun onSuccess(statusCode: Int, headers: Array<out Header>?, response: JSONObject?) {
+        override fun onSuccess(statusCode: Int, headers: Array<out Header>, response: JSONObject?) {
             super.onSuccess(statusCode, headers, response)
-
             // event bus из ответа о списке файлов каталога
-
-
+            EventBus.getDefault().post(MessageEventJSONobject(statusCode, headers.toMutableList(), response));
         }
-
-
-
 
         override fun onFailure(statusCode: Int, headers: Array<out Header>?, throwable: Throwable?, errorResponse: JSONObject?) {
             super.onFailure(statusCode, headers, throwable, errorResponse)
+            showToast("HTTP Error: " + statusCode, appContext)
         }
 
         override fun onFailure(statusCode: Int, headers: Array<out Header>?, throwable: Throwable?, errorResponse: JSONArray?) {
             super.onFailure(statusCode, headers, throwable, errorResponse)
+            showToast("HTTP Error: " + statusCode, appContext)
         }
 
         override fun onFailure(statusCode: Int, headers: Array<out Header>?, responseString: String?, throwable: Throwable?) {
             super.onFailure(statusCode, headers, responseString, throwable)
+            showToast("HTTP Error: " + statusCode, appContext)
         }
 
     })
