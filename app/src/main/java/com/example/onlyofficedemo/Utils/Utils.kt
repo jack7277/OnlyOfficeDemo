@@ -8,6 +8,7 @@ import android.preference.PreferenceManager
 import android.widget.Toast
 import com.example.onlyofficedemo.Network.resetToken
 import com.example.onlyofficedemo.activity_login.appContext
+import com.timejet.bio.timejet.UTILS.CurFolderData
 import com.timejet.bio.timejet.UTILS.LoggedInUser
 import com.timejet.bio.timejet.UTILS.LoggedInUser.Companion.USER_EMAIL
 import com.timejet.bio.timejet.UTILS.LoggedInUser.Companion.USER_PORTAL_NAME
@@ -33,6 +34,22 @@ fun saveUserToSharedPrefs (context: Context, user: User?){
 
     editor.apply()
 }
+
+val CUR_FOLDER_NAME = "curFolderName"
+val CUR_FOLDER_ID = "curFolderID"
+val CUR_FOLDER_PARENT_ID = "curFolderParentID"
+
+fun saveCurFolderDataToSharedPrefs (context: Context, folderData: CurFolderData?){
+    val prefs = PreferenceManager.getDefaultSharedPreferences(context)
+    val editor = prefs.edit()
+
+    editor.putString(CUR_FOLDER_NAME, folderData?.name)
+    editor.putString(CUR_FOLDER_ID, folderData?.folderID)
+    editor.putString(CUR_FOLDER_PARENT_ID, folderData?.parentID)
+
+    editor.apply()
+}
+
 
 
 // проверяем есть ли интернеты эти ваши

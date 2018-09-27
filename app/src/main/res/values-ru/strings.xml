@@ -16,5 +16,8 @@
     <string name="my_documents">Мои документы</string>
     <string name="common_documents">Общие документы</string>
 
+    <string name="documents">Документов:</string>
+    <string name="subfolders">Подпапок:</string>
+    <string name="to_parent_folder">to parent folder</string>
 
 </resources>

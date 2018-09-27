@@ -27,6 +27,9 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="my_documents">My Documents</string>
     <string name="common_documents">Common Documents</string>
+    <string name="documents">Documents:</string>
+    <string name="subfolders">Subfolders:</string>
+    <string name="to_parent_folder">to parent folder</string>
 
 
 </resources>

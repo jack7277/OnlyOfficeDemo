@@ -18,19 +18,24 @@ public class JSONhelper {
     public final static String JSON_FOLDERS_COUNT_IN_FOLDER = "foldersCount";
     public final static String JSON_PARENT_ID = "parentId";
 
+    public final static String JSON_CURRENT = "current";
+    public final static String JSON_TITLE = "title";
+    public final static String JSON_ID = "id";
+
+
     private JSONObject jsonObject;
 
     public JSONhelper(JSONObject jsonObject) {
         this.jsonObject = jsonObject;
     }
 
-    private JSONObject getJsonObject() {
+    public JSONObject getJsonObject() {
         return jsonObject;
     }
 
     // Возвращает код если в json ответе есть "statusCode": 200/201...
     public int getStatusCode() {
-        int statusCode = -1;
+        int statusCode = 0;
         try {
             statusCode = getJsonObject().getInt(JSON_STATUS_CODE);
         } catch (JSONException e) {
@@ -38,6 +43,18 @@ public class JSONhelper {
         }
         return statusCode;
     }
+
+    public JSONObject getCurrent (JSONObject jsonObject){
+        JSONObject jsonObjectCurrent = null;
+        try {
+            jsonObjectCurrent = getResponse().getJSONObject(JSON_CURRENT);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return jsonObjectCurrent;
+    }
+
 
     public String getTitle (){
         String folderTitle = null;
@@ -83,7 +100,7 @@ public class JSONhelper {
         return foldersCountInFolder;
     }
 
-    private JSONObject getResponse() {
+    public JSONObject getResponse() {
         JSONObject jsonObject = null;
         try {
             jsonObject = getJsonObject().getJSONObject(JSON_RESPONSE);
@@ -104,6 +121,7 @@ public class JSONhelper {
         return jsonObject;
     }
 
+    // 2 уровень
     public String getToken() {
         String token = null;
         try {
@@ -113,6 +131,7 @@ public class JSONhelper {
         }
         return token;
     }
+
 
     public JSONArray getFolders(){
         JSONArray jsonObject = null;

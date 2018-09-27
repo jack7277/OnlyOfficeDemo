@@ -24,6 +24,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.onlyofficedemo.Utils.JSONhelper;
+import com.timejet.bio.timejet.UTILS.CurrentFolder;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -102,17 +103,12 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
         return true;
     }
 
-    public void logout() {
-    }
-
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.listfoldersfiles);
-
-        //setInitialData();
 
 
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -137,28 +133,13 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
         // SwipeRefreshLayout
         mSwipeRefreshLayout = findViewById(R.id.swipe_container);
         mSwipeRefreshLayout.setRefreshing(true);
-        mSwipeRefreshLayout.setOnRefreshListener(() -> {
-            onRefresh();
-        });
+        mSwipeRefreshLayout.setOnRefreshListener(() -> onRefresh());
+
         mSwipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary,
                 android.R.color.holo_green_dark,
                 android.R.color.holo_orange_dark,
                 android.R.color.holo_blue_dark);
-        /**
-         * Showing Swipe Refresh animation on activity create
-         * As animation won't start on onCreate, post runnable is used
-         */
-        mSwipeRefreshLayout.post(() -> {
-            mSwipeRefreshLayout.setRefreshing(true);
-            // Fetching data from server
-            try {
-                //getDocuments();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
 
-        //updateRecyclerView(folderFiles);
 
         RecyclerView recyclerView = findViewById(R.id.list);
         // создаем адаптер
@@ -171,8 +152,8 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
+
 
     void updateRecyclerView(ArrayList<FolderFileListElement> folderFiles) {
         RecyclerView recyclerView = findViewById(R.id.list);
@@ -227,35 +208,59 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
 
         // создаю список каталогов из ответа
         JSONArray folders = new JSONhelper(jsonObject).getFolders();
-        Log.d(TAG, "updateList: ");
 
         // try to get parent ID
         String parentID = null;
         try {
-            parentID = new JSONhelper(folders.getJSONObject(0)).getParentID();
-            folderFiles.add(new FolderFileListElement("to parent folder", "", R.drawable.to_parent));
-        } catch (JSONException e) {
+            folderFiles.add(new FolderFileListElement(getString(R.string.to_parent_folder), "", R.drawable.to_parent));
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
+        // каталоги
         for (int i = 0; i < folders.length(); i++) {
             try {
                 JSONObject objFolder = folders.getJSONObject(i);
                 JSONhelper obj = new JSONhelper(objFolder);
 
                 String folderTitle = obj.getTitle();
+
+                String folderID = "";
+                try {
+                    folderID = objFolder.getString("id");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+                String createdByID = "";
+                try {
+                    createdByID = objFolder.getJSONObject("createdBy").getString("id");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
                 String filesCountInFolder = obj.getFilesCountInFolder();
                 String foldersCountInFolder = obj.getFoldersCountInFolder();
 
-                folderFiles.add(new FolderFileListElement(folderTitle, "Documents: " + filesCountInFolder + " | Subfolders: " + foldersCountInFolder, R.drawable.folder_image));
-                Log.d(TAG, "updateList: ");
-                //folderFiles.add()
+                folderFiles.add(new FolderFileListElement(folderTitle,
+                        getString(R.string.documents)
+                                + " "
+                                + filesCountInFolder
+                                + " | "
+                                + getString(R.string.subfolders)
+                                + " "
+                                + foldersCountInFolder
+                                + "\nid:"
+                                + " "
+                                + folderID
+                        , R.drawable.folder_image));
 
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
 
+        // файлы
         JSONArray files = new JSONhelper(jsonObject).getFiles();
         for (int i = 0; i < files.length(); i++) {
             try {
@@ -264,6 +269,8 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
 
                 int icon = 0;
                 String fname = obj.getTitle();
+
+                // урл картинки в ответе сервера содержится
                 if (fname.contains(".doc")) icon = R.drawable.docx_win_icon;
                 if (fname.contains(".xls")) icon = R.drawable.xlsx_win_icon;
                 if (fname.contains(".ppt")) icon = R.drawable.pptx_icon;
@@ -274,10 +281,9 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
             }
         }
 
-
+        // обновляем список
         updateRecyclerView(folderFiles);
     }
-
 
 
     @Override
@@ -295,7 +301,16 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
         Log.d("TAG", "onRefresh: ");
         mSwipeRefreshLayout.setRefreshing(true);
         try {
-            getDocuments("@my.json");
+            if (CurrentFolder.Companion.getCurrentFolder().getName().equals(getString(R.string.my_documents))) {
+                getDocuments(MY_DOCUMENTS);
+            } else if (CurrentFolder.Companion.getCurrentFolder().getName().equals(getString(R.string.common_documents))) {
+                getDocuments(COMMON_DOCUMENTS);
+            } else {
+                // вызов списка папок и файлов по ID
+                getDocuments(CurrentFolder.Companion.getCurrentFolder().getFolderID());
+            }
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -339,7 +354,7 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
     }
 
 
-    class DataAdapter extends RecyclerView.Adapter<DataAdapter.ViewHolder> {
+    class DataAdapter extends RecyclerView.Adapter<DataAdapter.ViewHolder> implements View.OnClickListener {
         //private LayoutInflater inflater;
         private List<FolderFileListElement> folderFiles;
 
@@ -351,6 +366,7 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
         @Override
         public DataAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             View view = inflater.inflate(R.layout.list_item, parent, false);
+            view.setOnClickListener(this);
 
             return new ViewHolder(view);
         }
@@ -370,7 +386,43 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
             return folderFiles.size();
         }
 
-        public class ViewHolder extends RecyclerView.ViewHolder {
+        @Override
+        public void onClick(View view) {
+            // нажатие на кнопку вернуться назад
+            String title1Text = "";
+            String title2Text = "";
+            try {
+                title1Text = ((TextView) view.findViewById(R.id.title1)).getText().toString();
+                title2Text = ((TextView) view.findViewById(R.id.title2)).getText().toString();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            try {
+                if (title1Text.equals(getString(R.string.to_parent_folder))) {
+                    String parentID = CurrentFolder.Companion.getCurrentFolder().getParentID();
+                    if (!parentID.equals("0")) getDocuments(parentID);
+                    return;
+                }
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+
+            // нажатие на каталог
+            try {
+                String[] ts2 = title2Text.split("id:");
+                String idClicked = ts2[1];
+                TextView textViewFolderName = findViewById(R.id.textViewFolderName);
+                textViewFolderName.setText(title1Text);
+
+                getDocuments(idClicked);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        class ViewHolder extends RecyclerView.ViewHolder {
             final ImageView imageView;
             final TextView title1, title2;
 
@@ -380,6 +432,7 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
                 title1 = view.findViewById(R.id.title1);
                 title2 = view.findViewById(R.id.title2);
             }
+
         }
     }
 }

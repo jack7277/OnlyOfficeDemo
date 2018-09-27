@@ -5,6 +5,7 @@ import android.support.v4.content.ContextCompat.startActivity
 import com.example.onlyofficedemo.MessageEventJSONobject
 import com.example.onlyofficedemo.R.string.*
 import com.example.onlyofficedemo.Utils.*
+import com.example.onlyofficedemo.Utils.JSONhelper.*
 import com.example.onlyofficedemo.activityFoldersFilesView
 import com.example.onlyofficedemo.activity_login.appContext
 import com.loopj.android.http.AsyncHttpClient
@@ -20,6 +21,7 @@ import cz.msebera.android.httpclient.protocol.HTTP
 import org.json.JSONArray
 import org.json.JSONObject
 import com.loopj.android.http.RequestParams
+import com.timejet.bio.timejet.UTILS.CurFolderData
 import org.greenrobot.eventbus.EventBus
 
 
@@ -131,6 +133,14 @@ fun getDocuments(relativeURL: String?) {
             super.onSuccess(statusCode, headers, response)
             // event bus из ответа о списке файлов каталога
             EventBus.getDefault().post(MessageEventJSONobject(statusCode, headers.toMutableList(), response));
+
+            val jsonHelper = JSONhelper(response)
+            val title =  jsonHelper.getCurrent(response).getString(JSON_TITLE)
+            val id = jsonHelper.getCurrent(response).getString(JSON_ID)
+            val parentID = jsonHelper.getCurrent(response).getString(JSON_PARENT_ID)
+
+            val curFolderData: CurFolderData = CurFolderData(title, id, parentID)
+            saveCurFolderDataToSharedPrefs(appContext, curFolderData)
         }
 
         override fun onFailure(statusCode: Int, headers: Array<out Header>?, throwable: Throwable?, errorResponse: JSONObject?) {
