@@ -446,8 +446,6 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
         try {
             title1Text = ((TextView) view.findViewById(R.id.title1)).getText().toString();
 
-
-
             if (title1Text.equals(getString(R.string.to_parent_folder))) {
                 String parentID = CurrentFolder.Companion.getCurrentFolder().getParentID();
                 if (!parentID.equals("0")) http_getDocuments(relativeIDurl(parentID));
