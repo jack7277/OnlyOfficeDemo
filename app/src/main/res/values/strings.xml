@@ -30,6 +30,7 @@
     <string name="documents">Documents:</string>
     <string name="subfolders">Subfolders:</string>
     <string name="to_parent_folder">to parent folder</string>
+    <string name="no_internet">no internet</string>
 
 
 </resources>

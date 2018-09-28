@@ -14,7 +14,6 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -41,7 +40,7 @@ import java.util.List;
 import cz.msebera.android.httpclient.Header;
 
 import static com.example.onlyofficedemo.Network.HTTP_requestsKt.getDocuments;
-import static com.example.onlyofficedemo.Network.HTTP_requestsKt.resetToken;
+import static com.example.onlyofficedemo.Network.HTTP_requestsKt.resetMyToken;
 import static com.example.onlyofficedemo.Utils.UtilsKt.showToast;
 
 public class activityFoldersFilesView extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener,
@@ -54,6 +53,7 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
     // кнопка андроида назад
     @Override
     public void onBackPressed() {
+        // если открыто боковое меню, закрываем
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
@@ -62,41 +62,58 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
         }
     }
 
-    final static String MY_DOCUMENTS = "/api/2.0/files/@my.json";
-    final static String COMMON_DOCUMENTS = "/api/2.0/files/@common.json";
-    final static String SELF_DOCUMENTS = "/api/2.0/people/@self.json";
-    public final static String PATH_TO_FILES = "/api/2.0/files/";
+    // относительные пути хттп запросов
+    final static String HTTP_RELATIVE_PATH_MY_DOCUMENTS = "/api/2.0/files/@my.json";
+    final static String HTTP_RELATIVE_PATH_COMMON_DOCUMENTS = "/api/2.0/files/@common.json";
+    final static String HTTP_RELATIVE_PATH_SELF_DOCUMENTS = "/api/2.0/people/@self.json";
+    public final static String HTTP_RELATIVE_PATH_TO_FILES = "/api/2.0/files/";
 
 
     @Override
+    // ловим нажатие на пункты бокового меню
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
+        // находим текстовое поле textViewFolderName класса TextView
+        //
         TextView textViewFolderName = findViewById(R.id.textViewFolderName);
 
         switch (id) {
+            // кликаю получить список моих документов
             case R.id.nav_my_documents:
                 try {
-                    getDocuments(MY_DOCUMENTS);
+                    // http асинхронный запрос
+                    getDocuments(HTTP_RELATIVE_PATH_MY_DOCUMENTS);
+
+                    // и тут же по антипаттерну меняю gui
                     textViewFolderName.setText(getString(R.string.my_documents));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 break;
 
+            // кликаю получить список общих документов
             case R.id.nav_common_documents:
                 try {
-                    getDocuments(COMMON_DOCUMENTS);
+                    getDocuments(HTTP_RELATIVE_PATH_COMMON_DOCUMENTS);
+
+                    // опять меняю гуй
                     textViewFolderName.setText(getString(R.string.common_documents));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 break;
 
+            // клик логаут
             case R.id.nav_logout:
-                resetToken();
+                // в шареде чищу токен, время жизни, полное имя и аватар
+                resetMyToken();
+
+                // запускаю логин экран
                 startActivity(new Intent(getApplicationContext(), activity_login.class));
+
+                // текущая активность завершается, чтобы в очереди назад не висела
                 finish();
                 break;
 
@@ -104,72 +121,79 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
                 break;
         }
 
+        // закрываем меню
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
+        // уходим
         return true;
     }
 
 
     @Override
+    // при запуске активности
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.listfoldersfiles);
 
         try {
-            // гружу инфу о себе
-            getDocuments(SELF_DOCUMENTS);
-            //return;
+            // гружу инфу о себе, полное имя, аватар, а емейл вводится на экране логина,
+            // но тоже получаю из запроса
+            getDocuments(HTTP_RELATIVE_PATH_SELF_DOCUMENTS);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-
+        // активация тулбара, боковое меню
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle("");
         try {
-            //getSupportActionBar().hide();//Ocultar ActivityBar anterior
             setSupportActionBar(toolbar);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-
+        // тулбар
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
+        // слушатель нажатия на пункты бокового меню
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        // SwipeRefreshLayout
+        // SwipeRefreshLayout, тянем вниз для обновления, вызов onRefresh()
         mSwipeRefreshLayout = findViewById(R.id.swipe_container);
         mSwipeRefreshLayout.setRefreshing(true);
         mSwipeRefreshLayout.setOnRefreshListener(() -> onRefresh());
-
+        // цвета обновления
         mSwipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary,
                 android.R.color.holo_green_dark,
                 android.R.color.holo_orange_dark,
                 android.R.color.holo_blue_dark);
 
 
+        // находим RecyclerView со списком
         RecyclerView recyclerView = findViewById(R.id.list);
-        // создаем адаптер
+        // создаем адаптер между списком и данными
         DataAdapter adapter = new DataAdapter(this, folderFiles);
         // устанавливаем для списка адаптер
         recyclerView.setAdapter(adapter);
 
         try {
-            getDocuments(MY_DOCUMENTS);
+            // при старте сразу гружу список последней сохраненной папки
+            getDocuments(relativeIDurl(CurrentFolder.Companion.getCurrentFolder().getFolderID()));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
 
+    // обновляю вид, но может еще notify нужен, пока так работает
     void updateRecyclerView(ArrayList<FolderFileListElement> folderFiles) {
+        // опять лезу в гуй
         RecyclerView recyclerView = findViewById(R.id.list);
         // создаем адаптер
         DataAdapter adapter = new DataAdapter(this, folderFiles);
@@ -180,34 +204,38 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
     @Override
     protected void onStart() {
         super.onStart();
+        // регистрируем eventbus
         EventBus.getDefault().register(this);
     }
 
     @Override
     protected void onStop() {
+        // отключаем eventbus
         EventBus.getDefault().unregister(this);
         super.onStop();
     }
 
+
+    // ловлю события от eventbus
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(MessageEventJSONobject event) {
+        // опять gui, отключаем показ обновления значка
         mSwipeRefreshLayout.setRefreshing(false);
 
-        // получаю от сервера список файлов и каталогов
+        // на всякий случай сперва на null
         if (event == null) {
             showToast("network error, null json", getApplicationContext());
             return;
         }
 
-        Log.d("TAG", "onMessageEvent: ");
-        //showToast("bus", getApplicationContext());
+        // если в ответе есть код 200 хттп ок, то считаю что это пакет о списке каталогом и файлов
         if (event.statusCode == 200) {
             updateFolderFilesRecyclerView(event);
         } else {
             showToast("error code: " + event.statusCode, getApplicationContext());
         }
 
-        // инфу об юзере тут не очень обновлять, засунуть в другое место
+        // GUI обновление информации о пользователе, имя, емейл, аватарка в боковом меню
         String userEmail = LoggedInUser.Companion.getUser().getUserEmail();
         String userName = LoggedInUser.Companion.getUser().getUserName();
         String avatar = LoggedInUser.Companion.getUser().getAvatarPicUrl();
@@ -228,9 +256,10 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
     }
 
 
-    final static String TAG = "activityFoldersFiles";
-
+    // обновляю список
     void updateFolderFilesRecyclerView(MessageEventJSONobject event) {
+        // предполагаю, что пришел нормальный ответ, statusCode и header - это http информация
+        // response содержит json ответ о списке каталогов и файлов
         int statusCode = event.statusCode;
         List<? extends Header> headers = event.header;
         JSONObject jsonObject = event.response;
@@ -240,22 +269,20 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
         // создаю список каталогов из ответа
         JSONArray folders = new JSONhelper(jsonObject).getFolders();
 
-        // try to get parent ID
-        String parentID = null;
+        // рисую назад кнопку to parent folder
         try {
             folderFiles.add(new FolderFileListElement(getString(R.string.to_parent_folder), "", R.drawable.to_parent));
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // каталоги
+        // каталоги,
         for (int i = 0; i < folders.length(); i++) {
             try {
+                // выделяю json каталог из ответа
                 JSONObject objFolder = folders.getJSONObject(i);
-                JSONhelper obj = new JSONhelper(objFolder);
 
-                String folderTitle = obj.getTitle();
-
+                // полупарсер id каталога для вставки в интерфейс для хождения по папкам
                 String folderID = "";
                 try {
                     folderID = objFolder.getString("id");
@@ -263,13 +290,8 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
                     e.printStackTrace();
                 }
 
-                String createdByID = "";
-                try {
-                    createdByID = objFolder.getJSONObject("createdBy").getString("id");
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-
+                JSONhelper obj = new JSONhelper(objFolder);
+                String folderTitle = obj.getTitle();
                 String filesCountInFolder = obj.getFilesCountInFolder();
                 String foldersCountInFolder = obj.getFoldersCountInFolder();
 
@@ -291,7 +313,7 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
             }
         }
 
-        // файлы
+        // файлы список
         JSONArray files = new JSONhelper(jsonObject).getFiles();
         for (int i = 0; i < files.length(); i++) {
             try {
@@ -312,7 +334,7 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
             }
         }
 
-        // обновляем список
+        // обновляем список recyclerview
         updateRecyclerView(folderFiles);
     }
 
@@ -329,15 +351,20 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
 
     @Override
     public void onRefresh() {
-        Log.d("TAG", "onRefresh: ");
+        // в процессе обновления
         mSwipeRefreshLayout.setRefreshing(true);
+
+        // хттп запрос в зависимости от типа документов
         try {
+            // мои документы
             if (CurrentFolder.Companion.getCurrentFolder().getName().equals(getString(R.string.my_documents))) {
-                getDocuments(MY_DOCUMENTS);
-            } else if (CurrentFolder.Companion.getCurrentFolder().getName().equals(getString(R.string.common_documents))) {
-                getDocuments(COMMON_DOCUMENTS);
+                getDocuments(HTTP_RELATIVE_PATH_MY_DOCUMENTS);
+            } else
+                // общие документы
+                if (CurrentFolder.Companion.getCurrentFolder().getName().equals(getString(R.string.common_documents))) {
+                getDocuments(HTTP_RELATIVE_PATH_COMMON_DOCUMENTS);
             } else {
-                // вызов списка папок и файлов по ID
+                // вызов списка папок и файлов по ID каталога
                 getDocuments(relativeIDurl(CurrentFolder.Companion.getCurrentFolder().getFolderID()));
             }
         } catch (Exception e) {
@@ -345,49 +372,14 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
         }
     }
 
-    // на входе ID
+    // на входе id
     // на выходе /api/2.0/files/{id}
     String relativeIDurl(String id) {
-        return (PATH_TO_FILES + id);
-    }
-
-    public class FolderFileListElement {
-        private String title1;
-        private String title2;
-        private int image;
-
-        public FolderFileListElement(String title1, String title2, int image) {
-            this.title1 = title1;
-            this.title2 = title2;
-            this.image = image;
-        }
-
-        public String getTitle1() {
-            return this.title1;
-        }
-
-        public void setTitle1(String title1) {
-            this.title1 = title1;
-        }
-
-        public String getTitle2() {
-            return this.title2;
-        }
-
-        public void setTitle2(String title2) {
-            this.title2 = title2;
-        }
-
-        public int getImage() {
-            return this.image;
-        }
-
-        public void setImage(int image) {
-            this.image = image;
-        }
+        return (HTTP_RELATIVE_PATH_TO_FILES + id);
     }
 
 
+    // адаптер между RecyclerView и моим самодельным списком
     class DataAdapter extends RecyclerView.Adapter<DataAdapter.ViewHolder> implements View.OnClickListener {
         //private LayoutInflater inflater;
         private List<FolderFileListElement> folderFiles;
@@ -406,6 +398,7 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
         }
 
         @Override
+        // вставка одного элемента из объекта списка FolderFileListElement
         public void onBindViewHolder(DataAdapter.ViewHolder holder, int position) {
             FolderFileListElement folderFile = this.folderFiles.get(position);
 
@@ -421,6 +414,7 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
         }
 
         @Override
+        // нажатие на элемент списка файлов и каталогов
         public void onClick(View view) {
             // нажатие на кнопку вернуться назад
             String title1Text = "";
@@ -436,7 +430,6 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
                 if (title1Text.equals(getString(R.string.to_parent_folder))) {
                     String parentID = CurrentFolder.Companion.getCurrentFolder().getParentID();
                     if (!parentID.equals("0")) getDocuments(relativeIDurl(parentID));
-                    TextView textViewFolderName = findViewById(R.id.textViewFolderName);
 
                     return;
                 }
@@ -446,18 +439,22 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
 
             // нажатие на каталог
             try {
+                // id каталога беру из UI из элемента TextView title2
                 String[] ts2 = title2Text.split("id:");
                 String idClicked = ts2[1];
+                getDocuments(relativeIDurl(idClicked));
+
+                // обновляю текущий UI с названием каталога текущего
                 TextView textViewFolderName = findViewById(R.id.textViewFolderName);
                 textViewFolderName.setText(title1Text);
 
-                getDocuments(relativeIDurl(idClicked));
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
         }
 
+        // получение ссылок на элементы UI
         class ViewHolder extends RecyclerView.ViewHolder {
             final ImageView imageView;
             final TextView title1, title2;
@@ -468,7 +465,6 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
                 title1 = view.findViewById(R.id.title1);
                 title2 = view.findViewById(R.id.title2);
             }
-
         }
     }
 }

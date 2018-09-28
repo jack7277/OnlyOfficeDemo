@@ -19,5 +19,6 @@
     <string name="documents">Документов:</string>
     <string name="subfolders">Подпапок:</string>
     <string name="to_parent_folder">to parent folder</string>
+    <string name="no_internet">нет этих ваших инторнетов</string>
 
 </resources>

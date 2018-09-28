@@ -6,7 +6,7 @@ import android.net.NetworkInfo
 import android.os.Looper
 import android.preference.PreferenceManager
 import android.widget.Toast
-import com.example.onlyofficedemo.Network.resetToken
+import com.example.onlyofficedemo.Network.resetMyToken
 import com.example.onlyofficedemo.activity_login.appContext
 import com.timejet.bio.timejet.UTILS.CurFolderData
 import com.timejet.bio.timejet.UTILS.LoggedInUser
@@ -23,6 +23,7 @@ fun showToast(message: String, context: Context) {
     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
 }
 
+// сохраняю полученного юзера в шаред
 fun saveUserToSharedPrefs (context: Context, user: User?){
     val prefs = PreferenceManager.getDefaultSharedPreferences(context)
     val editor = prefs.edit()
@@ -41,6 +42,7 @@ val CUR_FOLDER_NAME = "curFolderName"
 val CUR_FOLDER_ID = "curFolderID"
 val CUR_FOLDER_PARENT_ID = "curFolderParentID"
 
+// сохраняю текущий каталог в шаред
 fun saveCurFolderDataToSharedPrefs (context: Context, folderData: CurFolderData?){
     val prefs = PreferenceManager.getDefaultSharedPreferences(context)
     val editor = prefs.edit()
@@ -52,9 +54,7 @@ fun saveCurFolderDataToSharedPrefs (context: Context, folderData: CurFolderData?
     editor.apply()
 }
 
-
-
-// проверяем есть ли интернеты эти ваши
+// проверяем есть ли инторнеты эти ваши
 fun isOnline(): Boolean {
     val cm = appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
     val netInfo: NetworkInfo?
@@ -68,10 +68,7 @@ fun isOnline(): Boolean {
 }
 
 
-
-
-
-// проверка времени токена на валидность в сравнении с текущей датой/время
+// проверка времени токена на валидность в сравнении с текущей датой-время
 fun isTokenValid(): Boolean {
     // 2019-09-24T01:36:13.8831347+03:00
     val userTokenExpires = Objects.requireNonNull<User>(LoggedInUser.getUser()).tokenExpires
@@ -91,8 +88,8 @@ fun isTokenValid(): Boolean {
             return true
         } else {
             showToast("Token Invalid", appContext)
-            // делаем релогин, оставляю емейл, стираю токен и время жизни
-            resetToken()
+            //
+            resetMyToken()
         }
     } catch (e: Exception) {
         e.printStackTrace()

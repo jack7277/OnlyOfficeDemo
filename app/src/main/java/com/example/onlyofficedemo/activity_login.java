@@ -25,7 +25,7 @@ import static com.example.onlyofficedemo.Network.HTTP_requestsKt.loginOnlyOffice
 import static com.example.onlyofficedemo.Utils.UtilsKt.isOnline;
 import static com.example.onlyofficedemo.Utils.UtilsKt.showToast;
 
-public class activity_login extends Activity  {
+public class activity_login extends Activity {
     private static final String TAG = "DEBUG";
     public static Context appContext = null;
 
@@ -38,37 +38,34 @@ public class activity_login extends Activity  {
 
         View rootView = getWindow().getDecorView().findViewById(android.R.id.content);
 
+        // если на старте логин активности уже в шаред есть ключ токена ненулевой длины,
+        // то запускаю активность показать список файлов и папок
         String userToken = Objects.requireNonNull(LoggedInUser.Companion.getUser()).getUserToken();
-        if (userToken != null && !userToken.isEmpty()){
-        startActivityList(this);
+        if (userToken != null && !userToken.isEmpty()) {
+            startActivityList(this);
+            // тут уже finish() сработал, дальше ничего не надо выполнять
         }
 
-        //isTokenValid();
-        try {
-            // getDocuments("@my.json");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        try {
-//            loginProcess("1", "1", "1");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        // привязываю обработчик кнопки логин, сперва проверка на наличия инета, иначе пишем нэт инэт
+        // привязываю обработчик кнопки логин
         Button buttonLogin = findViewById(R.id.buttonLogin);
         buttonLogin.setOnClickListener((View view) -> {
+            // если есть инет, то пытаемся логиниться
             if (isOnline()) tryToLogin(rootView);
-            else showToast("no internet", appContext);
+            else // иначе пишем нет инет
+                showToast(getString(R.string.no_internet), appContext);
         });
-     // проверяем, если мы залогинены, то убиваю текущую активность и перехожу к следующей
     }
-   public final void startActivityList (Context context){
+
+    // старт активности показать список и завершить текущую активити
+    public final void startActivityList(Context context) {
         Intent intent = new Intent(context, activityFoldersFilesView.class);
         startActivity(intent);
+
         finish();
     }
+
+    // идентификатор успешности логина юзера
+    public final static int USER_SUCCESS_LOGIN = 12345;
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(MessageEventJSONobject event) {
@@ -79,12 +76,15 @@ public class activity_login extends Activity  {
         }
 
         // это не моё событие
-        if (event.statusCode!=666 && event.response!=null && event.header!=null) return;
-
+        if (event.statusCode != USER_SUCCESS_LOGIN && event.response != null && event.header != null)
+            return;
+        // если пришел ответ от сервера, что юзер успешно залогинился, запускаем активность список
+        // останавливаю текущую активность
         startActivityList(this);
     }
 
-
+    // валидация емейла с помощью javax.mail validate
+    // возвращает true если емейл валидный
     public static boolean isValidEmailAddress(String email) {
         boolean result = true;
         try {
@@ -96,15 +96,17 @@ public class activity_login extends Activity  {
         return result;
     }
 
-
+    // пытаемся логиться
     public void tryToLogin(View view) {
-        // Login Portal
+        // Login Portal полный урл получаю из ui
         String portalName = null;
         try {
+            // лезу в ui элемент
             EditText portalNameEditText = view.findViewById(R.id.editTextPortalName);
+
+            // экранирую введенный урл
             portalName = URLEncoder.encode(portalNameEditText.getText().toString(), "UTF-8");
 
-            //executeCommand(portalName);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -114,17 +116,15 @@ public class activity_login extends Activity  {
         String loginEmailText = null;
         try {
             EditText editTextEmail = view.findViewById(R.id.editTextEmail);
+
             loginEmailText = editTextEmail.getText().toString();
 
-            if (!isValidEmailAddress(loginEmailText)) {
-                showToast(getString(R.string.invalid_email), appContext);
-                return; // уходим
-            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // Login Password
+        // Password
         String passwordText = null;
         try {
             EditText passwordEditText = view.findViewById(R.id.editTextPassword);
@@ -134,10 +134,12 @@ public class activity_login extends Activity  {
         }
 
 
+        // проверяю все три элемента на валидность
         if (isInputValid(loginEmailText, passwordText, portalName)) {
-            // do loginOnlyOffice
+            // do login OnlyOffice
 //            showToast("Begin Login Process", appContext); рисуем мультик
             try {
+                // фильтр входных данных пройден, пытаемся логиниться
                 loginOnlyOffice(loginEmailText, passwordText, portalName);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -146,11 +148,11 @@ public class activity_login extends Activity  {
     }
 
 
-
     // провожу валидацию введенных данных в поля логин-пароль
     boolean isInputValid(String loginEmailText, String passwordText, String portalName) {
-        if (loginEmailText == null || loginEmailText.isEmpty()) {
+        if (loginEmailText == null || loginEmailText.isEmpty() || !isValidEmailAddress(loginEmailText) ) {
             showToast(getString(R.string.login_cant_be_empty_message), appContext);
+            showToast(getString(R.string.invalid_email), appContext);
             return false;
         }
 
@@ -166,9 +168,6 @@ public class activity_login extends Activity  {
 
         return true;
     }
-
-
-
 
 
     @Override
