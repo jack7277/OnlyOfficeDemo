@@ -8,7 +8,7 @@ public class JSONhelper {
     public final static String JSON_STATUS_CODE = "statusCode";
     public final static String JSON_USER_TOKEN = "token";
     public final static String JSON_RESPONSE = "response";
-    public final static String USER_TOKEN_EXPIRES = "expires";
+    public final static String JSON_USER_TOKEN_EXPIRES = "expires";
     public final static String JSON_MESSAGE = "message";
     public final static String JSON_ERROR = "error";
     public final static String JSON_FOLDERS = "folders";
@@ -17,6 +17,10 @@ public class JSONhelper {
     public final static String JSON_FILES_COUNT_IN_FOLDER = "filesCount";
     public final static String JSON_FOLDERS_COUNT_IN_FOLDER = "foldersCount";
     public final static String JSON_PARENT_ID = "parentId";
+
+    public final static String JSON_USER_DISPLAY_NAME = "displayName";
+    public final static String JSON_USER_AVATAR = "avatar";
+    public final static String JSON_USER_EMAIL = "email";
 
     public final static String JSON_CURRENT = "current";
     public final static String JSON_TITLE = "title";
@@ -160,7 +164,7 @@ public class JSONhelper {
     public String getTokenExpires() {
         String tokenExpires = null;
         try {
-            tokenExpires = getResponse().getString(USER_TOKEN_EXPIRES);
+            tokenExpires = getResponse().getString(JSON_USER_TOKEN_EXPIRES);
         } catch (JSONException e) {
             e.printStackTrace();
         }

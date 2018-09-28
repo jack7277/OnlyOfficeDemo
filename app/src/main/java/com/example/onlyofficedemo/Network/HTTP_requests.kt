@@ -7,8 +7,10 @@ import com.example.onlyofficedemo.R.string.*
 import com.example.onlyofficedemo.Utils.*
 import com.example.onlyofficedemo.Utils.JSONhelper.*
 import com.example.onlyofficedemo.activityFoldersFilesView
+import com.example.onlyofficedemo.activityFoldersFilesView.PATH_TO_FILES
 import com.example.onlyofficedemo.activity_login.appContext
 import com.loopj.android.http.AsyncHttpClient
+import com.loopj.android.http.AsyncHttpClient.log
 import com.loopj.android.http.JsonHttpResponseHandler
 import com.loopj.android.http.PersistentCookieStore
 import com.timejet.bio.timejet.UTILS.LoggedInUser
@@ -22,13 +24,15 @@ import org.json.JSONArray
 import org.json.JSONObject
 import com.loopj.android.http.RequestParams
 import com.timejet.bio.timejet.UTILS.CurFolderData
+
 import org.greenrobot.eventbus.EventBus
+import java.net.URLEncoder
 
 
 internal fun resetToken() {
     // время вышло, оставляем имя портала и емейл и стираю Токен и его Дату-Время
     saveUserToSharedPrefs(appContext,
-            User(LoggedInUser.getUser()!!.userPortal, LoggedInUser.getUser()!!.userEmail, "", ""))
+            User(LoggedInUser.getUser()!!.userPortal, LoggedInUser.getUser()!!.userEmail, "", "","",""))
 }
 
 @Throws(Exception::class)
@@ -65,7 +69,7 @@ fun loginOnlyOffice(loginEmailText: String?, passwordText: String?, portalName: 
             val tokenExpires = jsonHelper.tokenExpires
 
             // сохраняю емейл, токен и время его жизни
-            val user: User? = User(portalName, loginEmailText, token, tokenExpires)
+            val user: User? = User(portalName, loginEmailText, token, tokenExpires, "", "")
             saveUserToSharedPrefs(appContext, user)
 
             //saveToSharedPrefs(appContext, loginEmailText, token, tokenExpires)
@@ -111,13 +115,14 @@ fun getDocuments(relativeURL: String?) {
         return;
     }
 
+
+
     val portalName = LoggedInUser.getUser()?.userPortal
     val autorization = LoggedInUser.getUser()?.userToken
 
-    val url: String? = "https://" +
-            portalName +
-            "/api/2.0/files/" +//@my.json"
-            relativeURL;
+    // api/2.0/people/
+
+    val url: String? = URLEncoder.encode("https://$portalName$relativeURL", "utf-8");
 
     val client = AsyncHttpClient()
 
@@ -134,13 +139,35 @@ fun getDocuments(relativeURL: String?) {
             // event bus из ответа о списке файлов каталога
             EventBus.getDefault().post(MessageEventJSONobject(statusCode, headers.toMutableList(), response));
 
-            val jsonHelper = JSONhelper(response)
-            val title =  jsonHelper.getCurrent(response).getString(JSON_TITLE)
-            val id = jsonHelper.getCurrent(response).getString(JSON_ID)
-            val parentID = jsonHelper.getCurrent(response).getString(JSON_PARENT_ID)
 
-            val curFolderData: CurFolderData = CurFolderData(title, id, parentID)
-            saveCurFolderDataToSharedPrefs(appContext, curFolderData)
+            // это делать для ответа по запросу открытия каталогов @my, @common и каталог по идентификатору id
+                val jsonHelper = JSONhelper(response)
+                val title :String? =  jsonHelper.getCurrent(response)?.getString(JSON_TITLE)
+                val id:String? = jsonHelper.getCurrent(response)?.getString(JSON_ID)
+                val parentID:String? = jsonHelper.getCurrent(response)?.getString(JSON_PARENT_ID)
+                // в ответе о @self id, title и parentsID будут null
+            if (title!=null && id!=null && parentID!=null) {
+                val curFolderData: CurFolderData = CurFolderData(title, id, parentID)
+                saveCurFolderDataToSharedPrefs(appContext, curFolderData)
+                return
+            } // тут ловим ответ юзера, нет разделения трафика
+            else{
+                val uName:String? = jsonHelper.response?.getString(JSON_USER_DISPLAY_NAME)
+                val uEmail:String? = jsonHelper.response?.getString(JSON_USER_EMAIL)
+                val uAvatar:String? = jsonHelper.response?.getString(JSON_USER_AVATAR)
+
+                if (uName!=null && uEmail!=null && uAvatar!=null){
+                    val user: User? = User(LoggedInUser.getUser()?.userPortal,
+                            uEmail,
+                            LoggedInUser.getUser()?.userToken,
+                            LoggedInUser.getUser()?.tokenExpires,
+                            uName,
+                            uAvatar)
+
+                    saveUserToSharedPrefs(appContext, user)
+                    return
+                }
+            }
         }
 
         override fun onFailure(statusCode: Int, headers: Array<out Header>?, throwable: Throwable?, errorResponse: JSONObject?) {

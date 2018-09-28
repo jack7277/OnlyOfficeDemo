@@ -30,7 +30,9 @@ fun saveUserToSharedPrefs (context: Context, user: User?){
     editor.putString(USER_PORTAL_NAME, user?.userPortal)
     editor.putString(USER_EMAIL, user?.userEmail)
     editor.putString(JSONhelper.JSON_USER_TOKEN, user?.userToken)
-    editor.putString(JSONhelper.USER_TOKEN_EXPIRES, user?.tokenExpires)
+    editor.putString(JSONhelper.JSON_USER_TOKEN_EXPIRES, user?.tokenExpires)
+    editor.putString(JSONhelper.JSON_USER_DISPLAY_NAME, user?.userName)
+    editor.putString(JSONhelper.JSON_USER_AVATAR, user?.avatarPicUrl)
 
     editor.apply()
 }

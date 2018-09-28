@@ -24,7 +24,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.onlyofficedemo.Utils.JSONhelper;
+import com.squareup.picasso.Picasso;
 import com.timejet.bio.timejet.UTILS.CurrentFolder;
+import com.timejet.bio.timejet.UTILS.LoggedInUser;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -42,7 +44,9 @@ import static com.example.onlyofficedemo.Network.HTTP_requestsKt.getDocuments;
 import static com.example.onlyofficedemo.Network.HTTP_requestsKt.resetToken;
 import static com.example.onlyofficedemo.Utils.UtilsKt.showToast;
 
-public class activityFoldersFilesView extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener, NavigationView.OnNavigationItemSelectedListener {
+public class activityFoldersFilesView extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener,
+        NavigationView.OnNavigationItemSelectedListener,
+        NavigationView.OnCreateContextMenuListener {
     ArrayList<FolderFileListElement> folderFiles = new ArrayList<>();
     private LayoutInflater inflater;
     SwipeRefreshLayout mSwipeRefreshLayout;
@@ -58,8 +62,10 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
         }
     }
 
-    final static String MY_DOCUMENTS = "@my.json";
-    final static String COMMON_DOCUMENTS = "@common.json";
+    final static String MY_DOCUMENTS = "/api/2.0/files/@my.json";
+    final static String COMMON_DOCUMENTS = "/api/2.0/files/@common.json";
+    final static String SELF_DOCUMENTS = "/api/2.0/people/@self.json";
+   public final static String PATH_TO_FILES = "/api/2.0/files/";
 
 
     @Override
@@ -110,6 +116,14 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
 
         setContentView(R.layout.listfoldersfiles);
 
+        try {
+            // гружу инфу о себе
+            getDocuments(SELF_DOCUMENTS);
+            //return;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle("");
@@ -148,7 +162,7 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
         recyclerView.setAdapter(adapter);
 
         try {
-            getDocuments("@my.json");
+            getDocuments(MY_DOCUMENTS);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -161,7 +175,6 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
         DataAdapter adapter = new DataAdapter(this, folderFiles);
         // устанавливаем для списка адаптер
         recyclerView.setAdapter(adapter);
-
     }
 
     @Override
@@ -189,17 +202,35 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
         Log.d("TAG", "onMessageEvent: ");
         //showToast("bus", getApplicationContext());
         if (event.statusCode == 200) {
-            updateList(event);
+            updateFolderFilesRecyclerView(event);
         } else {
             showToast("error code: " + event.statusCode, getApplicationContext());
         }
 
+        // инфу об юзере тут не очень обновлять, засунуть в другое место
+        String userEmail = LoggedInUser.Companion.getUser().getUserEmail();
+        String userName = LoggedInUser.Companion.getUser().getUserName();
+        String avatar = LoggedInUser.Companion.getUser().getAvatarPicUrl();
+        if (userEmail != null &&
+                userName != null &&
+                 avatar != null) {
+
+            ImageView avatarIV = findViewById(R.id.imageViewAvatar);
+            TextView TVuserName = findViewById(R.id.TVuserName);
+            TextView TVemail = findViewById(R.id.TVemail);
+
+           // avatarIV
+            Picasso.get().load(avatar).into(avatarIV);
+
+            TVuserName.setText(userName);
+            TVemail.setText(userEmail);
+        }
     }
 
 
     final static String TAG = "activityFoldersFiles";
 
-    void updateList(MessageEventJSONobject event) {
+    void updateFolderFilesRecyclerView(MessageEventJSONobject event) {
         int statusCode = event.statusCode;
         List<? extends Header> headers = event.header;
         JSONObject jsonObject = event.response;
@@ -307,7 +338,7 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
                 getDocuments(COMMON_DOCUMENTS);
             } else {
                 // вызов списка папок и файлов по ID
-                getDocuments(CurrentFolder.Companion.getCurrentFolder().getFolderID());
+                getDocuments(PATH_TO_FILES + CurrentFolder.Companion.getCurrentFolder().getFolderID());
             }
 
 
@@ -401,10 +432,12 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
             try {
                 if (title1Text.equals(getString(R.string.to_parent_folder))) {
                     String parentID = CurrentFolder.Companion.getCurrentFolder().getParentID();
-                    if (!parentID.equals("0")) getDocuments(parentID);
+                    if (!parentID.equals("0")) getDocuments(PATH_TO_FILES + parentID);
+                    TextView textViewFolderName = findViewById(R.id.textViewFolderName);
+
                     return;
                 }
-            }catch(Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
 
@@ -415,7 +448,7 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
                 TextView textViewFolderName = findViewById(R.id.textViewFolderName);
                 textViewFolderName.setText(title1Text);
 
-                getDocuments(idClicked);
+                getDocuments(PATH_TO_FILES + idClicked);
             } catch (Exception e) {
                 e.printStackTrace();
             }
