@@ -65,7 +65,7 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
     final static String MY_DOCUMENTS = "/api/2.0/files/@my.json";
     final static String COMMON_DOCUMENTS = "/api/2.0/files/@common.json";
     final static String SELF_DOCUMENTS = "/api/2.0/people/@self.json";
-   public final static String PATH_TO_FILES = "/api/2.0/files/";
+    public final static String PATH_TO_FILES = "/api/2.0/files/";
 
 
     @Override
@@ -213,13 +213,13 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
         String avatar = LoggedInUser.Companion.getUser().getAvatarPicUrl();
         if (userEmail != null &&
                 userName != null &&
-                 avatar != null) {
+                avatar != null) {
 
             ImageView avatarIV = findViewById(R.id.imageViewAvatar);
             TextView TVuserName = findViewById(R.id.TVuserName);
             TextView TVemail = findViewById(R.id.TVemail);
 
-           // avatarIV
+            // avatarIV
             Picasso.get().load(avatar).into(avatarIV);
 
             TVuserName.setText(userName);
@@ -338,15 +338,18 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
                 getDocuments(COMMON_DOCUMENTS);
             } else {
                 // вызов списка папок и файлов по ID
-                getDocuments(PATH_TO_FILES + CurrentFolder.Companion.getCurrentFolder().getFolderID());
+                getDocuments(relativeIDurl(CurrentFolder.Companion.getCurrentFolder().getFolderID()));
             }
-
-
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    // на входе ID
+    // на выходе /api/2.0/files/{id}
+    String relativeIDurl(String id) {
+        return (PATH_TO_FILES + id);
+    }
 
     public class FolderFileListElement {
         private String title1;
@@ -432,7 +435,7 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
             try {
                 if (title1Text.equals(getString(R.string.to_parent_folder))) {
                     String parentID = CurrentFolder.Companion.getCurrentFolder().getParentID();
-                    if (!parentID.equals("0")) getDocuments(PATH_TO_FILES + parentID);
+                    if (!parentID.equals("0")) getDocuments(relativeIDurl(parentID));
                     TextView textViewFolderName = findViewById(R.id.textViewFolderName);
 
                     return;
@@ -448,7 +451,7 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
                 TextView textViewFolderName = findViewById(R.id.textViewFolderName);
                 textViewFolderName.setText(title1Text);
 
-                getDocuments(PATH_TO_FILES + idClicked);
+                getDocuments(relativeIDurl(idClicked));
             } catch (Exception e) {
                 e.printStackTrace();
             }

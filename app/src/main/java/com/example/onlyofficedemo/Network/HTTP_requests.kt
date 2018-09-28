@@ -115,12 +115,8 @@ fun getDocuments(relativeURL: String?) {
         return;
     }
 
-
-
     val portalName = LoggedInUser.getUser()?.userPortal
     val autorization = LoggedInUser.getUser()?.userToken
-
-    // api/2.0/people/
 
     val url: String? = URLEncoder.encode("https://$portalName$relativeURL", "utf-8");
 
