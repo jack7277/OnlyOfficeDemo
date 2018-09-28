@@ -1,20 +1,15 @@
 package com.example.onlyofficedemo.Utils
 
 import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkInfo
 import android.os.Looper
 import android.preference.PreferenceManager
 import android.widget.Toast
-import com.example.onlyofficedemo.Network.resetMyToken
 import com.example.onlyofficedemo.activity_login.appContext
 import com.timejet.bio.timejet.UTILS.CurFolderData
 import com.timejet.bio.timejet.UTILS.LoggedInUser
 import com.timejet.bio.timejet.UTILS.LoggedInUser.Companion.USER_EMAIL
 import com.timejet.bio.timejet.UTILS.LoggedInUser.Companion.USER_PORTAL_NAME
 import com.timejet.bio.timejet.UTILS.User
-import org.joda.time.DateTime
-import java.util.*
 
 
 // показ тоста, передача контекста вроде как плохая идея
@@ -54,46 +49,12 @@ fun saveCurFolderDataToSharedPrefs (context: Context, folderData: CurFolderData?
     editor.apply()
 }
 
-// проверяем есть ли инторнеты эти ваши
-fun isOnline(): Boolean {
-    val cm = appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
-    val netInfo: NetworkInfo?
 
-    if (cm != null) {
-        netInfo = cm.activeNetworkInfo
-        if (netInfo != null && netInfo.isConnected)
-            return true
-    }
-    return false
+// функция сброса токена
+// записывает пустые строки в: токен, время жизни токена, полное имя юзера, аватарка-урл
+internal fun resetMyToken() {
+    // время вышло, оставляем имя портала и емейл и стираю Токен и его Дату-Время
+    saveUserToSharedPrefs(appContext,
+            User(LoggedInUser.getUser()!!.userPortal, LoggedInUser.getUser()!!.userEmail, "", "", "", ""))
 }
 
-
-// проверка времени токена на валидность в сравнении с текущей датой-время
-fun isTokenValid(): Boolean {
-    // 2019-09-24T01:36:13.8831347+03:00
-    val userTokenExpires = Objects.requireNonNull<User>(LoggedInUser.getUser()).tokenExpires
-
-    try { //parse by joda time
-        // сохраненное дата-время токена
-        val dtToken = DateTime.parse(userTokenExpires)
-        val dtTokenMillis = dtToken.millis
-
-        // текущее дата-время
-        val dtNow = DateTime()
-        val dateTimeNowMillis = dtNow.millis
-
-        // проверяем не вышло ли время токена
-        if (dtTokenMillis >= dateTimeNowMillis) {
-            //showToast("Token Valid", appContext)
-            return true
-        } else {
-            showToast("Token Invalid", appContext)
-            //
-            resetMyToken()
-        }
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
-
-    return false
-}

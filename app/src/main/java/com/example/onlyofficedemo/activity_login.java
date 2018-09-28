@@ -21,8 +21,9 @@ import java.util.Objects;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-import static com.example.onlyofficedemo.Network.HTTP_requestsKt.loginOnlyOffice;
-import static com.example.onlyofficedemo.Utils.UtilsKt.isOnline;
+import static com.example.onlyofficedemo.Network.HTTP_requestsKt.http_loginOnlyOffice;
+
+import static com.example.onlyofficedemo.Network.HTTP_requestsKt.isOnline;
 import static com.example.onlyofficedemo.Utils.UtilsKt.showToast;
 
 public class activity_login extends Activity {
@@ -75,17 +76,18 @@ public class activity_login extends Activity {
             return;
         }
 
-        // это не моё событие
+        // это не моё событие, я жду только 1 событие успешный логин
         if (event.statusCode != USER_SUCCESS_LOGIN && event.response != null && event.header != null)
             return;
-        // если пришел ответ от сервера, что юзер успешно залогинился, запускаем активность список
-        // останавливаю текущую активность
+
+        // если пришел ответ от сервера, что юзер успешно залогинился,
+        // запускаем активность список файлов и останавливаю текущую активность
         startActivityList(this);
     }
 
     // валидация емейла с помощью javax.mail validate
     // возвращает true если емейл валидный
-    public static boolean isValidEmailAddress(String email) {
+    boolean isValidEmailAddress(String email) {
         boolean result = true;
         try {
             InternetAddress emailAddr = new InternetAddress(email);
@@ -96,61 +98,71 @@ public class activity_login extends Activity {
         return result;
     }
 
-    // пытаемся логиться
-    public void tryToLogin(View view) {
-        // Login Portal полный урл получаю из ui
+    String ui_getEncodedPortalName() {
         String portalName = null;
         try {
             // лезу в ui элемент
-            EditText portalNameEditText = view.findViewById(R.id.editTextPortalName);
-
+            EditText portalNameEditText = findViewById(R.id.editTextPortalName);
             // экранирую введенный урл
             portalName = URLEncoder.encode(portalNameEditText.getText().toString(), "UTF-8");
-
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return portalName;
+    }
 
-
-        // Login EMAIL
-        String loginEmailText = null;
+    String ui_getValidEmail() {
         try {
-            EditText editTextEmail = view.findViewById(R.id.editTextEmail);
+            EditText editTextEmail = findViewById(R.id.editTextEmail);
+            String email = editTextEmail.getText().toString();
 
-            loginEmailText = editTextEmail.getText().toString();
-
-
+            if (isValidEmailAddress(email)) return email;
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return null;
+    }
 
-        // Password
+    String ui_getRawPassword() {
         String passwordText = null;
         try {
-            EditText passwordEditText = view.findViewById(R.id.editTextPassword);
+            EditText passwordEditText = findViewById(R.id.editTextPassword);
             passwordText = passwordEditText.getText().toString();
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return passwordText;
+    }
 
+    // пытаемся логиниться
+    public void tryToLogin(View view) {
+        // Login Portal полный урл получаю из ui
+        String portalName = ui_getEncodedPortalName();
+
+        // Login EMAIL
+        String loginEmail = ui_getValidEmail();
+
+        // Password
+        String password = ui_getRawPassword();
 
         // проверяю все три элемента на валидность
-        if (isInputValid(loginEmailText, passwordText, portalName)) {
-            // do login OnlyOffice
+        if (isInputValid(loginEmail, password, portalName)) {
 //            showToast("Begin Login Process", appContext); рисуем мультик
             try {
                 // фильтр входных данных пройден, пытаемся логиниться
-                loginOnlyOffice(loginEmailText, passwordText, portalName);
+                // должен залогиниться один из трех
+                http_loginOnlyOffice(loginEmail, password, portalName + ".onlyoffice.com");
+                http_loginOnlyOffice(loginEmail, password, portalName + ".onlyoffice.eu");
+                http_loginOnlyOffice(loginEmail, password, portalName + ".onlyoffice.sg");
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
     }
 
-
     // провожу валидацию введенных данных в поля логин-пароль
     boolean isInputValid(String loginEmailText, String passwordText, String portalName) {
-        if (loginEmailText == null || loginEmailText.isEmpty() || !isValidEmailAddress(loginEmailText) ) {
+        if (loginEmailText == null || loginEmailText.isEmpty()) {
             showToast(getString(R.string.login_cant_be_empty_message), appContext);
             showToast(getString(R.string.invalid_email), appContext);
             return false;

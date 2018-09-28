@@ -48,6 +48,7 @@ public class JSONhelper {
         return statusCode;
     }
 
+    // вынуть response-current
     public JSONObject getCurrent (JSONObject jsonObject){
         JSONObject jsonObjectCurrent = null;
         try {
@@ -60,7 +61,8 @@ public class JSONhelper {
     }
 
 
-    public String getTitle (){
+    // вынуть имя каталога
+    public String getTitleFolderFile(){
         String folderTitle = null;
         try {
             folderTitle = getJsonObject().getString(JSON_TITLE_FOLDER);
@@ -69,17 +71,6 @@ public class JSONhelper {
         }
 
         return folderTitle;
-    }
-
-    public String getParentID (){
-        String parentID = null;
-        try {
-            parentID = getJsonObject().getString(JSON_PARENT_ID);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        return parentID;
     }
 
     public String getFilesCountInFolder (){
@@ -104,6 +95,7 @@ public class JSONhelper {
         return foldersCountInFolder;
     }
 
+    // возвращает json объект из response, если что возвращается json с ошибкой
     public JSONObject getResponse() {
         JSONObject jsonObject = null;
         try {
@@ -125,7 +117,7 @@ public class JSONhelper {
         return jsonObject;
     }
 
-    // 2 уровень
+    // из response ответа авторизации достаем токен юзера
     public String getToken() {
         String token = null;
         try {
@@ -137,6 +129,7 @@ public class JSONhelper {
     }
 
 
+    // массив json объектов с каталогами
     public JSONArray getFolders(){
         JSONArray jsonObject = null;
         try {
@@ -148,6 +141,7 @@ public class JSONhelper {
         return jsonObject;
     }
 
+    // массив json объектов с файлами
     public JSONArray getFiles(){
         JSONArray jsonObject = null;
         try {
@@ -160,7 +154,7 @@ public class JSONhelper {
     }
 
 
-
+    // из response ответа авторизации вынимаю время жизни токена
     public String getTokenExpires() {
         String tokenExpires = null;
         try {
@@ -171,6 +165,7 @@ public class JSONhelper {
         return tokenExpires;
     }
 
+    // из Response вынуть message
     public String getMessage() {
         String message = null;
         try {

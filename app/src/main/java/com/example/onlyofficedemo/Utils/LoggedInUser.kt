@@ -9,18 +9,15 @@ import com.example.onlyofficedemo.Utils.JSONhelper.JSON_USER_AVATAR
 import com.example.onlyofficedemo.Utils.JSONhelper.JSON_USER_DISPLAY_NAME
 import com.example.onlyofficedemo.activity_login.appContext
 
-data class User (var userPortal:String?,
-                 var userEmail:String?,
-                 var userToken:String?,
-                 var tokenExpires:String?,
-                 var userName:String?,
-                 var avatarPicUrl:String?)
+data class User(var userPortal: String?,
+                var userEmail: String?,
+                var userToken: String?,
+                var tokenExpires: String?,
+                var userName: String?,
+                var avatarPicUrl: String?)
 
 
 class LoggedInUser {
-    init {
-//         данные берем из шаред для инициализации
-    }
     // если при обращении к какому-то элементу его нет, то разово инициализируем объект
     companion object {
         val USER_PORTAL_NAME = "userPortal"
@@ -38,12 +35,11 @@ class LoggedInUser {
             )
             return user
         }
-
     }
 }
 
 
-data class CurFolderData (var name:String?, var folderID:String?, var parentID:String?)
+data class CurFolderData(var name: String?, var folderID: String?, var parentID: String?)
 
 class CurrentFolder {
     companion object {
@@ -56,6 +52,5 @@ class CurrentFolder {
             )
             return folderData
         }
-
     }
 }
