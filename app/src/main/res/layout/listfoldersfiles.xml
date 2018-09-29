@@ -32,7 +32,6 @@
             android:layout_height="25dp"
             android:layout_marginStart="60dp"
             android:layout_marginTop="18dp"
-            android:text="My Documents"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 

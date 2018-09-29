@@ -23,6 +23,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.onlyofficedemo.Utils.JSONhelper;
+import com.squareup.picasso.OkHttp3Downloader;
 import com.squareup.picasso.Picasso;
 import com.timejet.bio.timejet.UTILS.CurrentFolder;
 import com.timejet.bio.timejet.UTILS.LoggedInUser;
@@ -38,10 +39,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 
-import static com.example.onlyofficedemo.Network.HTTP_requestsKt.http_getDocuments;
 import static com.example.onlyofficedemo.Network.HTTP_requestsKt.http_GetMyselfInfoSaveShared;
-
+import static com.example.onlyofficedemo.Network.HTTP_requestsKt.http_getDocuments;
 import static com.example.onlyofficedemo.Utils.UtilsKt.resetMyToken;
 import static com.example.onlyofficedemo.Utils.UtilsKt.showToast;
 
@@ -166,7 +168,7 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
                 android.R.color.holo_blue_dark);
     }
 
-    void http_DownloadLastOpenedFolder(){
+    void http_DownloadLastOpenedFolder() {
         // при первом запуске последний путь будет равен урл HTTP_RELATIVE_PATH_TO_FILES
         String folderID = relativeIDurl(CurrentFolder.Companion.getCurrentFolder().getFolderID());
         if (!folderID.equals(HTTP_RELATIVE_PATH_TO_FILES))
@@ -177,12 +179,16 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
             }
     }
 
+    View rootView = null;
+
     @Override
     // при запуске активности
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.listfoldersfiles);
+
+        rootView = getWindow().getDecorView().findViewById(android.R.id.content);
 
         http_GetMyselfInfoSaveShared();
 
@@ -192,7 +198,7 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
 
         ui_SwipeOnRefreshListener();
 
-        http_DownloadLastOpenedFolder ();
+        http_DownloadLastOpenedFolder();
 
     }
 
@@ -220,7 +226,28 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
         super.onStop();
     }
 
-    void ui_UpdateUserInfoToolbarMenu(){
+    void ui_loadShowAvatar(String url){
+        ImageView avatarIV = findViewById(R.id.imageViewAvatar);
+
+        // avatar picasso loader with auth token
+        OkHttpClient client = new OkHttpClient.Builder()
+                .addInterceptor(chain -> {
+                    Request newRequest = chain.request().newBuilder()
+                            .addHeader("Authorization", LoggedInUser.Companion.getUser().getUserToken())
+                            .build();
+                    return chain.proceed(newRequest);
+                })
+                .build();
+
+        Picasso picasso = new Picasso.Builder(getApplicationContext())
+                .downloader(new OkHttp3Downloader(client))
+                .build();
+
+        // load and show
+        picasso.load(url).into(avatarIV);
+    }
+
+    void ui_UpdateUserInfoToolbarMenu() {
         // GUI обновление информации о пользователе, имя, емейл, аватарка в боковом меню
         String userEmail = LoggedInUser.Companion.getUser().getUserEmail();
         String userName = LoggedInUser.Companion.getUser().getUserName();
@@ -229,15 +256,15 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
                 userName != null &&
                 avatar != null) {
 
-            ImageView avatarIV = findViewById(R.id.imageViewAvatar);
             TextView TVuserName = findViewById(R.id.TVuserName);
             TextView TVemail = findViewById(R.id.TVemail);
 
-            // avatar picasso loader
-            Picasso.get().load(avatar).into(avatarIV);
-
             TVuserName.setText(userName);
             TVemail.setText(userEmail);
+
+            // avatar url
+            String url = "https://" + LoggedInUser.Companion.getUser().getUserPortal() + avatar;
+            ui_loadShowAvatar(url);
         }
     }
 
@@ -423,7 +450,7 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
         @Override
         // нажатие на элемент списка файлов и каталогов
         public void onClick(View view) {
-           ui_recyclerViewItemClick(view);
+            ui_recyclerViewItemClick(view);
         }
 
         // получение ссылок на элементы UI
@@ -440,7 +467,7 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
         }
     }
 
-    void ui_recyclerViewItemClick(View view){
+    void ui_recyclerViewItemClick(View view) {
         // нажатие на кнопку вернуться назад
         String title1Text = null;
         try {

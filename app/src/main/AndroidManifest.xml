@@ -3,8 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.example.onlyofficedemo">
 
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.INTERNET" />
+
+
 
     <application
         android:allowBackup="false"
@@ -14,8 +16,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar"
 
+
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".activityFoldersFilesView" />
+        <activity android:name=".activityFoldersFilesView">
+        <meta-data android:name="android.notch_support" android:value="true"/>
+        </activity>
+
         <activity android:name=".activity_login">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
