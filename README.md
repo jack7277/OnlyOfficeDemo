@@ -9,3 +9,4 @@ min API 19 - Андроид 4.4 KITKAT
 - отчеты об исключениях Rollbar
 - отображение списка recyclerview
 - обратный ответ из Async-http через Eventbus
+- Боковое меню Navigation Drawer
