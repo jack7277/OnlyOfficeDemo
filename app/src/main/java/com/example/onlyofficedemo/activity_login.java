@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.rollbar.notifier.Rollbar;
 import com.timejet.bio.timejet.UTILS.LoggedInUser;
 
 import org.greenrobot.eventbus.EventBus;
@@ -22,13 +23,24 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
 import static com.example.onlyofficedemo.Network.HTTP_requestsKt.http_loginOnlyOffice;
-
 import static com.example.onlyofficedemo.Network.HTTP_requestsKt.isOnline;
 import static com.example.onlyofficedemo.Utils.UtilsKt.showToast;
+import static com.rollbar.notifier.config.ConfigBuilder.withAccessToken;
 
 public class activity_login extends Activity {
     private static final String TAG = "DEBUG";
     public static Context appContext = null;
+    static final String ROLLBAR_API_KEY = "865f8071fa6f4a6397f2c82450422da3";
+    public static final String APP_VERSION = "0.12";
+
+    // Инициализирую Rollbar своим ключом и передаю текст текущей версии
+    // ловить все непойманные исключения
+    public static final Rollbar rollbar = new Rollbar(
+            withAccessToken(ROLLBAR_API_KEY)
+                    .environment("OnlyOffice Demo v." + APP_VERSION)
+                    .handleUncaughtErrors(true)
+                    .build());
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

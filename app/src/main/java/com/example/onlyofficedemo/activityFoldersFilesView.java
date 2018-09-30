@@ -23,6 +23,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.onlyofficedemo.Utils.JSONhelper;
+import com.rollbar.notifier.Rollbar;
 import com.squareup.picasso.OkHttp3Downloader;
 import com.squareup.picasso.Picasso;
 import com.timejet.bio.timejet.UTILS.CurrentFolder;
@@ -46,6 +47,9 @@ import static com.example.onlyofficedemo.Network.HTTP_requestsKt.http_GetMyselfI
 import static com.example.onlyofficedemo.Network.HTTP_requestsKt.http_getDocuments;
 import static com.example.onlyofficedemo.Utils.UtilsKt.resetMyToken;
 import static com.example.onlyofficedemo.Utils.UtilsKt.showToast;
+import static com.example.onlyofficedemo.activity_login.APP_VERSION;
+import static com.example.onlyofficedemo.activity_login.ROLLBAR_API_KEY;
+import static com.rollbar.notifier.config.ConfigBuilder.withAccessToken;
 
 public class activityFoldersFilesView extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener,
         NavigationView.OnNavigationItemSelectedListener,
@@ -53,6 +57,15 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
     ArrayList<FolderFileListElement> folderFiles = new ArrayList<>();
     private LayoutInflater inflater;
     SwipeRefreshLayout mSwipeRefreshLayout;
+
+
+    // Инициализирую Rollbar своим ключом и передаю текст текущей версии
+    // ловить все непойманные исключения
+    public static final Rollbar rollbar = new Rollbar(
+            withAccessToken(ROLLBAR_API_KEY)
+                    .environment("OnlyOffice Demo v." + APP_VERSION)
+                    .handleUncaughtErrors(true)
+                    .build());
 
     // кнопка андроида назад
     @Override
@@ -199,7 +212,6 @@ public class activityFoldersFilesView extends AppCompatActivity implements Swipe
         ui_SwipeOnRefreshListener();
 
         http_DownloadLastOpenedFolder();
-
     }
 
 

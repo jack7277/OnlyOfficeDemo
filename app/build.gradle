@@ -51,6 +51,8 @@ dependencies {
 
     implementation 'joda-time:joda-time:2.10'
 
+    implementation 'com.rollbar:rollbar-java:1.2.0'
+    implementation 'com.rollbar:rollbar-android:1.2.0@aar'
 
 
     androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
