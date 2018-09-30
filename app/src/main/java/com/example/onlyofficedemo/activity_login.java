@@ -24,6 +24,7 @@ import javax.mail.internet.InternetAddress;
 
 import static com.example.onlyofficedemo.Network.HTTP_requestsKt.http_loginOnlyOffice;
 import static com.example.onlyofficedemo.Network.HTTP_requestsKt.isOnline;
+import static com.example.onlyofficedemo.Network.HTTP_requestsKt.isTokenValid;
 import static com.example.onlyofficedemo.Utils.UtilsKt.showToast;
 import static com.rollbar.notifier.config.ConfigBuilder.withAccessToken;
 
@@ -54,10 +55,11 @@ public class activity_login extends Activity {
         // если на старте логин активности уже в шаред есть ключ токена ненулевой длины,
         // то запускаю активность показать список файлов и папок
         String userToken = Objects.requireNonNull(LoggedInUser.Companion.getUser()).getUserToken();
-        if (userToken != null && !userToken.isEmpty()) {
+        if (userToken != null && !userToken.isEmpty() && isTokenValid()) {
             startActivityList(this);
             // тут уже finish() сработал, дальше ничего не надо выполнять
         }
+
 
         // привязываю обработчик кнопки логин
         Button buttonLogin = findViewById(R.id.buttonLogin);
